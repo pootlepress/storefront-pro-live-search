@@ -1,2 +1,2 @@
 # woocommerce-live-search
-A live suggested serach
+A live suggested search
