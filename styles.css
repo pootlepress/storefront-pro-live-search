@@ -1,9 +1,0 @@
-.wc-live-search-container {
-	padding: 0;
-}
-
-.wc-live-search-container > .wc-live-search-field,
-.wc-live-search-container > .wc-live-search-results {
-	display: block;
-	width: 100%;
-}

@@ -1,0 +1,52 @@
+.wc-live-search-container {
+	padding: 0;
+}
+
+.wc-live-search-container > .wc-live-search-field {
+	display: block;
+	width: 100%;
+}
+
+.wc-live-search-results h3 {
+	padding: 15px 20px 0;
+	margin: 0;
+}
+
+.wc-live-search-results div:first-child a {
+	padding: 10px 20px;
+}
+
+.wc-live-search-container{
+	position: relative;
+}
+
+.wc-live-search-results {
+	display: none;
+	position: absolute;
+	background: white;
+	padding: 0px 0;
+	left: 0;
+	right: 0;
+}
+
+.wc-live-search-container:hover .wc-live-search-results,
+.wc-live-search-field:focus + .wc-live-search-results {
+	display: block;
+}
+
+.wc-live-search-results a {
+	display: block;
+	font-weight: normal;
+	padding: 10px 20px;
+}
+
+.wc-live-search-results a:hover {
+	background: #eeeeee;
+}
+
+.wcls-prod img {
+	display: inline-block;
+	vertical-align: middle;
+	max-width: 40px;
+	margin-right: 20px
+}

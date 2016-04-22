@@ -65,7 +65,6 @@ class Wc_Live_Search_Widget extends WP_Widget {
 		if ( ! empty( $title ) ) {
 			echo $args['before_title'] . $title . $args['after_title'];
 		}
-
 		?>
 		<div class="wc-live-search-container">
 			<input placeholder="<?php echo $instance['placeholder'] ?>" type='search' class='wc-live-search-field' />
