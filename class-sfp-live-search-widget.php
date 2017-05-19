@@ -4,19 +4,19 @@
  * @developer wpdevelopment.me <shramee@wpdvelopment.me>
  */
 
-/** Class Wc_Live_Search_Widget */
-class Wc_Live_Search_Widget extends WP_Widget {
+/** Class Storefront_Pro_Live_Search_Widget */
+class Storefront_Pro_Live_Search_Widget extends WP_Widget {
 
 	/** Basic Widget Settings */
-	const WIDGET_NAME = "WooCommerce Live Search";
-	const WIDGET_DESCRIPTION = "Awesome widget that searches for WooCommerce Products and Product Categories";
+	const WIDGET_NAME = "Storefront Pro Live Search";
+	const WIDGET_DESCRIPTION = "Awesome widget that searches for WooCommerce Products and Product Categories live!";
 
 	var $textdomain;
 	var $fields;
 
 	/** Construct the widget */
 	function __construct() {
-		$this->textdomain = 'wc-live-search';
+		$this->textdomain = 'sfp-live-search';
 
 		// Add fields
 		$this->fields();
@@ -48,6 +48,20 @@ class Wc_Live_Search_Widget extends WP_Widget {
 	 * @param array $instance
 	 */
 	public function widget( $args, $instance ) {
+		echo $this->render_widget(  $args, $instance  );
+	}
+
+
+
+	/**
+	 * Widget frontend
+	 *
+	 * @param array $args
+	 * @param array $instance
+	 *
+	 * @return string Widget HTML
+	 */
+	public function render_widget( $args, $instance ) {
 
 		$instance = wp_parse_args(
 			$instance,
@@ -59,21 +73,20 @@ class Wc_Live_Search_Widget extends WP_Widget {
 
 		$title = apply_filters( 'widget_title', $instance['title'] );
 
-		/* Before and after widget arguments are usually modified by themes */
-		echo $args['before_widget'];
+		$html = '';
 
 		if ( ! empty( $title ) ) {
-			echo $args['before_title'] . $title . $args['after_title'];
+			$html .= $args['before_title'] . $title . $args['after_title'];
 		}
-		?>
-		<div class="wc-live-search-container">
-			<input placeholder="<?php echo $instance['placeholder'] ?>" type='search' class='wc-live-search-field' />
-			<div class='wc-live-search-results'></div>
+		$html .= "
+		<div class='sfp-live-search-container'>
+			<input placeholder='$instance[placeholder]' type='search' class='search-field sfp-live-search-field' />
+			<div class='sfp-live-search-results'></div>
 		</div>
-		<?php
+		";
 
-		/* After widget */
-		echo $args['after_widget'];
+		/* Before and after widget arguments */
+		return $args['before_widget'] . $html . $args['after_widget'];
 	}
 
 	/**

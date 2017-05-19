@@ -4,11 +4,11 @@
 
 ( function ( $ ) {
 	var timeOut;
-	$( '.wc-live-search-field' ).keyup( function () {
+	$( '.sfp-live-search-field' ).keyup( function () {
 
 		var $t = $( this ),
 			val = $t.val(),
-			$r = $t.siblings( '.wc-live-search-results' );
+			$r = $t.siblings( '.sfp-live-search-results' );
 
 		if ( timeOut ) clearTimeout( timeOut );
 		timeOut = null;
@@ -25,7 +25,7 @@
 					method: 'POST',
 					url   : wclsAjax.url,
 					data  : {
-						action: 'wc_live_search',
+						action: 'Storefront_Pro_Live_Search',
 						s     : val
 					}
 				} )

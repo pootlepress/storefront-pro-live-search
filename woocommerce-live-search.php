@@ -2,7 +2,7 @@
 /**
  * @developer wpdevelopment.me <shramee@wpdvelopment.me>
  * Plugin Name: WooCommerce Live Search
- * Plugin URI: http://pootlepress.com/wc-live-search
+ * Plugin URI: http://pootlepress.com/sfp-live-search
  * Description: Effortlessly create WordPress widgets with this template!
  * Version: 1.0
  * Author: pootlepress
@@ -11,18 +11,18 @@
  */
 
 /** WooCommerce Live Search main class */
-class Wc_Live_Search {
+class Storefront_Pro_Live_Search {
 
-	/** @var Wc_Live_Search Instance */
+	/** @var Storefront_Pro_Live_Search Instance */
 	private static $instance = null;
 
-	/** @return Wc_Live_Search Instance */
+	/** @return Storefront_Pro_Live_Search Instance */
 	static function instance() {
-		if ( ! Wc_Live_Search::$instance ) {
-			Wc_Live_Search::$instance = new Wc_Live_Search();
+		if ( ! Storefront_Pro_Live_Search::$instance ) {
+			Storefront_Pro_Live_Search::$instance = new Storefront_Pro_Live_Search();
 		}
 
-		return Wc_Live_Search::$instance;
+		return Storefront_Pro_Live_Search::$instance;
 	}
 
 	/** @var string Text domain */
@@ -30,10 +30,23 @@ class Wc_Live_Search {
 
 	/** Constructor */
 	function __construct() {
-		$this->textdomain = 'wc-live-search';
+		$this->textdomain = 'sfp-live-search';
 		add_action( 'widgets_init', array( $this, 'register' ) );
+		add_filter( 'sfp_search_form_html', array( $this, 'replace_storefront_search' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue' ) );
-		add_action( 'wp_ajax_wc_live_search', array( $this, 'search' ) );
+		add_action( 'wp_ajax_Storefront_Pro_Live_Search', array( $this, 'search' ) );
+	}
+
+	/** Returns the search results */
+	function replace_storefront_search( $html, $args = [] ) {
+		ob_start();
+		the_widget( 'Storefront_Pro_Live_Search_Widget' );
+		$live_search = ob_get_clean();
+		if ( $live_search ) {
+			return $live_search;
+		} else {
+			return $html;
+		}
 	}
 
 	/** Returns the search results */
@@ -78,7 +91,7 @@ class Wc_Live_Search {
 
 	/** Registers the widget */
 	function register () {
-		register_widget( "Wc_Live_Search_Widget" );
+		register_widget( "Storefront_Pro_Live_Search_Widget" );
 	}
 
 	/** Enqueue scripts and styles */
@@ -91,6 +104,6 @@ class Wc_Live_Search {
 	}
 }
 
-include 'class-wc-live-search-widget.php';
+include 'class-sfp-live-search-widget.php';
 
-Wc_Live_Search::instance();
+Storefront_Pro_Live_Search::instance();
