@@ -22,17 +22,14 @@
 
 		timeOut = setTimeout( function () {
 			$.ajax( {
-					method: 'POST',
-					url   : wclsAjax.url,
-					data  : {
-						action: 'Storefront_Pro_Live_Search',
-						s     : val
-					}
+					method: 'GET',
+					url   : wclsAjax.url + '?s=' + val,
 				} )
 				.done( function ( r ) {
 					$r.html( '' );
-
-					r = JSON.parse( r );
+					if ( typeof r === 'string' ) {
+						r = JSON.parse( r );
+					}
 					$.each( r, function ( k, e ) {
 						var $cnt = $( '<div><h3>' + k + '</h3></div>' );
 						$.each( e, function ( l, html ) {

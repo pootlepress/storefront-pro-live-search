@@ -1,9 +1,9 @@
 <?php
 /**
  * @developer wpdevelopment.me <shramee@wpdvelopment.me>
- * Plugin Name: WooCommerce Live Search
+ * Plugin Name: Storefront Pro Live Search
  * Plugin URI: http://pootlepress.com/sfp-live-search
- * Description: Effortlessly create WordPress widgets with this template!
+ * Description: Search WooCommerce products and categories live.
  * Version: 1.0
  * Author: pootlepress
  * Author URI: http://pootlepress.com
@@ -34,11 +34,24 @@ class Storefront_Pro_Live_Search {
 		add_action( 'widgets_init', array( $this, 'register' ) );
 		add_filter( 'sfp_search_form_html', array( $this, 'replace_storefront_search' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue' ) );
-		add_action( 'wp_ajax_Storefront_Pro_Live_Search', array( $this, 'search' ) );
+		add_action( 'rest_api_init', array( $this, 'rest_routes' ) );
+
+		//Now handled by REST api
+//		add_action( 'wp_ajax_Storefront_Pro_Live_Search', array( $this, 'search' ) );
+	}
+
+	/** Returns the search results */
+	function rest_routes() {
+		register_rest_route( 'sfp-live-search/v1', '/search', array(
+			'methods' => [ 'POST', 'GET' ],
+			'callback' => array( $this, 'search' ),
+		) );
+
 	}
 
 	/** Returns the search results */
 	function replace_storefront_search( $html, $args = [] ) {
+
 		ob_start();
 		the_widget( 'Storefront_Pro_Live_Search_Widget' );
 		$live_search = ob_get_clean();
@@ -51,7 +64,10 @@ class Storefront_Pro_Live_Search {
 
 	/** Returns the search results */
 	function search() {
+		$bench_seconds = microtime(true);
+
 		$s = filter_input( INPUT_POST, 's' );
+		$s = ! $s ? filter_input( INPUT_GET, 's' ) : $s;
 		$json = array();
 		$terms = get_terms( array(
 			'taxonomy' => 'product_cat',
@@ -84,9 +100,11 @@ class Storefront_Pro_Live_Search {
 			$json[ __( 'Products', $this->textdomain ) ] = $prods_json;
 		}
 
-		echo json_encode( $json );
-		//print_r( get_intermediate_image_sizes() );
-		exit();
+		if ( isset( $_REQUEST['bench'] ) ) {
+			echo "<h3>Time taken : " . (microtime(true) - $bench_seconds);
+		}
+
+		return $json;
 	}
 
 	/** Registers the widget */
@@ -98,7 +116,8 @@ class Storefront_Pro_Live_Search {
 	function enqueue () {
 		wp_enqueue_script( 'wcls-script', plugin_dir_url( __FILE__ ) . '/script.js', array( 'jquery' ), '1.0.0', 'in_footer' );
 		wp_localize_script( 'wcls-script', 'wclsAjax', array(
-			'url' => admin_url( 'admin-ajax.php' ),
+//			'url' => admin_url( 'admin-ajax.php' ),
+			'url' => get_rest_url( null, '/sfp-live-search/v1/search'),
 		) );
 		wp_enqueue_style( 'wcls-style', plugin_dir_url( __FILE__ ) . '/style.css' );
 	}
