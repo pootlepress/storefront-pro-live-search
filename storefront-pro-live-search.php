@@ -15,6 +15,21 @@ class Storefront_Pro_Live_Search {
 
 	/** @var Storefront_Pro_Live_Search Instance */
 	private static $instance = null;
+	/** @var string Text domain */
+	private $textdomain = null;
+
+	/** Constructor */
+	function __construct() {
+		$this->textdomain = 'sfp-live-search';
+		add_action( 'widgets_init', array( $this, 'register' ) );
+		add_action( 'wp', array( $this, 'init' ) );
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue' ) );
+		add_action( 'rest_api_init', array( $this, 'rest_routes' ) );
+		add_filter( 'storefront_pro_fields', array( $this, 'fields' ) );
+
+		//Now handled by REST api
+//		add_action( 'wp_ajax_Storefront_Pro_Live_Search', array( $this, 'search' ) );
+	}
 
 	/** @return Storefront_Pro_Live_Search Instance */
 	static function instance() {
@@ -25,28 +40,50 @@ class Storefront_Pro_Live_Search {
 		return Storefront_Pro_Live_Search::$instance;
 	}
 
-	/** @var string Text domain */
-	private $textdomain = null;
+	/** Initiate hooks */
+	function fields( $fields ) {
+		$fields[] = array(
+			'id'       => 'show-live-search',
+			'label'    => 'Show live search',
+			'section'  => 'existing_header_image',
+			'priority' => 25,
+			'type'     => 'select',
+			'default'  => '',
+			'choices'  => array(
+				'' => "Don't show",
+				'1'   => 'Replace default search',
+				'2'   => 'Add in header',
+			),
+		);
+		return $fields;
+	}
 
-	/** Constructor */
-	function __construct() {
-		$this->textdomain = 'sfp-live-search';
-		add_action( 'widgets_init', array( $this, 'register' ) );
-		add_filter( 'sfp_search_form_html', array( $this, 'replace_storefront_search' ) );
-		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue' ) );
-		add_action( 'rest_api_init', array( $this, 'rest_routes' ) );
-
-		//Now handled by REST api
-//		add_action( 'wp_ajax_Storefront_Pro_Live_Search', array( $this, 'search' ) );
+	/** Initiate hooks */
+	function init() {
+		$show = Storefront_Pro::instance()->public->get( 'show-live-search' );
+		if ( 1 == $show ) {
+			add_filter( 'sfp_search_form_html', array( $this, 'replace_storefront_search' ) );
+		} else if ( 2 == $show ) {
+			add_filter( 'storefront_header', array( $this, 'header_searchbar' ), 23 );
+		}
 	}
 
 	/** Returns the search results */
 	function rest_routes() {
 		register_rest_route( 'sfp-live-search/v1', '/search', array(
-			'methods' => [ 'POST', 'GET' ],
+			'methods'  => [ 'POST', 'GET' ],
 			'callback' => array( $this, 'search' ),
 		) );
 
+	}
+
+	/** Returns the search results */
+	function header_searchbar() {
+		?>
+		<div class="sfp-header-live-search">
+			<?php the_widget( 'Storefront_Pro_Live_Search_Widget' ); ?>
+		</div>
+		<?php
 	}
 
 	/** Returns the search results */
@@ -64,19 +101,19 @@ class Storefront_Pro_Live_Search {
 
 	/** Returns the search results */
 	function search() {
-		$bench_seconds = microtime(true);
+		$bench_seconds = microtime( true );
 
-		$s = filter_input( INPUT_POST, 's' );
-		$s = ! $s ? filter_input( INPUT_GET, 's' ) : $s;
-		$json = array();
-		$terms = get_terms( array(
-			'taxonomy' => 'product_cat',
-			'number' => 7,
+		$s         = filter_input( INPUT_POST, 's' );
+		$s         = ! $s ? filter_input( INPUT_GET, 's' ) : $s;
+		$json      = array();
+		$terms     = get_terms( array(
+			'taxonomy'   => 'product_cat',
+			'number'     => 7,
 			'name__like' => $s,
 		) );
 		$cats_json = array();
-		foreach( $terms as $t ) {
-			$link = get_term_link( $t );
+		foreach ( $terms as $t ) {
+			$link               = get_term_link( $t );
 			$cats_json[ $link ] = "<a class='wcls-tax' href='$link'>$t->name</a>";
 		}
 
@@ -84,15 +121,15 @@ class Storefront_Pro_Live_Search {
 			$json[ __( 'Categories', $this->textdomain ) ] = $cats_json;
 		}
 
-		$prods = get_posts( array(
-			's' => $s,
+		$prods      = get_posts( array(
+			's'         => $s,
 			'post_type' => 'product',
-			'number' => 16,
+			'number'    => 16,
 		) );
 		$prods_json = array();
-		foreach( $prods as $p ) {
-			$link = $p->guid;
-			$thumb = get_the_post_thumbnail_url( $p, 'thumbnail' );
+		foreach ( $prods as $p ) {
+			$link                = $p->guid;
+			$thumb               = get_the_post_thumbnail_url( $p, 'thumbnail' );
 			$prods_json[ $link ] = "<a class='wcls-prod' href='$link'><img src='$thumb'>$p->post_title</a>";
 		}
 
@@ -101,23 +138,23 @@ class Storefront_Pro_Live_Search {
 		}
 
 		if ( isset( $_REQUEST['bench'] ) ) {
-			echo "<h3>Time taken : " . (microtime(true) - $bench_seconds);
+			echo "<h3>Time taken : " . ( microtime( true ) - $bench_seconds );
 		}
 
 		return $json;
 	}
 
 	/** Registers the widget */
-	function register () {
+	function register() {
 		register_widget( "Storefront_Pro_Live_Search_Widget" );
 	}
 
 	/** Enqueue scripts and styles */
-	function enqueue () {
+	function enqueue() {
 		wp_enqueue_script( 'wcls-script', plugin_dir_url( __FILE__ ) . '/script.js', array( 'jquery' ), '1.0.0', 'in_footer' );
 		wp_localize_script( 'wcls-script', 'wclsAjax', array(
 //			'url' => admin_url( 'admin-ajax.php' ),
-			'url' => get_rest_url( null, '/sfp-live-search/v1/search'),
+			'url' => get_rest_url( null, '/sfp-live-search/v1/search' ),
 		) );
 		wp_enqueue_style( 'wcls-style', plugin_dir_url( __FILE__ ) . '/style.css' );
 	}
