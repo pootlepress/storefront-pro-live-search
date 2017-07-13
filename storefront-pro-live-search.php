@@ -101,11 +101,17 @@ class Storefront_Pro_Live_Search {
 
 	/** Returns the search results */
 	function search() {
-		$bench_seconds = microtime( true );
 
 		$s         = filter_input( INPUT_POST, 's' );
 		$s         = ! $s ? filter_input( INPUT_GET, 's' ) : $s;
-		$json      = array();
+		$json      = get_transient( "sfp-ls-q-$s" );
+
+		if ( $json ) {
+			return $json;
+		} else {
+			$json = array();
+		}
+
 		$terms     = get_terms( array(
 			'taxonomy'   => 'product_cat',
 			'number'     => 7,
@@ -137,9 +143,7 @@ class Storefront_Pro_Live_Search {
 			$json[ __( 'Products', $this->textdomain ) ] = $prods_json;
 		}
 
-		if ( isset( $_REQUEST['bench'] ) ) {
-			echo "<h3>Time taken : " . ( microtime( true ) - $bench_seconds );
-		}
+		set_transient( "sfp-ls-q-$s", $json, DAY_IN_SECONDS/2 );
 
 		return $json;
 	}
