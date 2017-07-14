@@ -42,79 +42,6 @@ class Storefront_Pro_Live_Search_Widget extends WP_Widget {
 	}
 
 	/**
-	 * Widget frontend
-	 *
-	 * @param array $args
-	 * @param array $instance
-	 */
-	public function widget( $args, $instance ) {
-		echo $this->render_widget(  $args, $instance  );
-	}
-
-
-
-	/**
-	 * Widget frontend
-	 *
-	 * @param array $args
-	 * @param array $instance
-	 *
-	 * @return string Widget HTML
-	 */
-	public function render_widget( $args, $instance ) {
-
-		$instance = wp_parse_args(
-			$instance,
-			array(
-				'title' => '',
-				'placeholder' => 'Search',
-			)
-		);
-
-		$title = apply_filters( 'widget_title', $instance['title'] );
-
-		$html = '';
-
-		if ( ! empty( $title ) ) {
-			$html .= $args['before_title'] . $title . $args['after_title'];
-		}
-		$html .= "
-		<div class='sfp-live-search-container'>
-			<input placeholder='$instance[placeholder]' type='search' class='search-field sfp-live-search-field' />
-			<div class='sfp-live-search-results'></div>
-		</div>
-		";
-
-		/* Before and after widget arguments */
-		return $args['before_widget'] . $html . $args['after_widget'];
-	}
-
-	/**
-	 * Widget backend
-	 *
-	 * @param array $instance
-	 *
-	 * @return string|void
-	 */
-	public function form( $instance ) {
-		/* Generate admin for fields */
-		foreach ( $this->fields as $field_name => $field_data ) {
-			if ( in_array( $field_data['type'], array( 'text', 'number', 'range', 'date', 'time', 'datetime', 'checkbox' ) ) ):
-				?>
-				<p>
-					<label for="<?php echo $this->get_field_id( $field_name ); ?>"><?php _e( $field_data['description'], $this->textdomain ); ?></label>
-					<input class="widefat" id="<?php echo $this->get_field_id( $field_name ); ?>" name="<?php echo $this->get_field_name( $field_name ); ?>" type="text" value="<?php echo esc_attr( isset( $instance[ $field_name ] ) ? $instance[ $field_name ] : $field_data['default_value'] ); ?>"/>
-				</p>
-				<?php
-			//elseif($field_data['type'] == 'textarea'):
-			//You can implement more field types like this.
-			else:
-				echo __( 'Error - Field type not supported', $this->textdomain ) . ': ' . $field_data['type'];
-			endif;
-		}
-	}
-
-	/**
 	 * Adds a text field to the widget
 	 *
 	 * @param $field_name
@@ -133,6 +60,96 @@ class Storefront_Pro_Live_Search_Widget extends WP_Widget {
 			'default_value' => $field_default_value,
 			'type'          => $field_type
 		);
+	}
+
+	/**
+	 * Widget frontend
+	 *
+	 * @param array $args
+	 * @param array $instance
+	 */
+	public function widget( $args, $instance ) {
+		echo $this->render_widget( $args, $instance );
+	}
+
+	/**
+	 * Widget frontend
+	 *
+	 * @param array $args
+	 * @param array $instance
+	 *
+	 * @return string Widget HTML
+	 */
+	public function render_widget( $args, $instance ) {
+
+		$instance = wp_parse_args(
+			$instance,
+			array(
+				'title'       => '',
+				'placeholder' => 'Search',
+			)
+		);
+
+		$title = apply_filters( 'widget_title', $instance['title'] );
+
+		$html = '';
+
+		if ( ! empty( $title ) ) {
+			$html .= $args['before_title'] . $title . $args['after_title'];
+		}
+		$html .= "
+		<div class='sfp-live-search-container'>
+		<form role='search' method='get' action='http://wp/ppb/'>
+			<label class='screen-reader-text' for='s'>Search for:</label>
+			<input placeholder='$instance[placeholder]' type='search' class='search-field sfp-live-search-field' name='s' title='Search for:'>
+			<button type='submit'><span class='fa fa-search'></span></button>
+			<input type='hidden' name='post_type[]' value='product'>
+			<input type='hidden' name='post_type[]' value='post'>
+			<input type='hidden' name='post_type[]' value='page'>
+			<div class='sfp-live-search-results'></div>
+		</form>
+		</div>
+		";
+
+		/* Before and after widget arguments */
+
+		return $args['before_widget'] . $html . $args['after_widget'];
+	}
+
+	/**
+	 * Widget backend
+	 *
+	 * @param array $instance
+	 *
+	 * @return string|void
+	 */
+	public function form( $instance ) {
+		/* Generate admin for fields */
+		foreach ( $this->fields as $field_name => $field_data ) {
+			if ( in_array( $field_data['type'], array(
+				'text',
+				'number',
+				'range',
+				'date',
+				'time',
+				'datetime',
+				'checkbox'
+			) ) ):
+				?>
+				<p>
+					<label
+						for="<?php echo $this->get_field_id( $field_name ); ?>"><?php _e( $field_data['description'], $this->textdomain ); ?></label>
+					<input class="widefat" id="<?php echo $this->get_field_id( $field_name ); ?>"
+								 name="<?php echo $this->get_field_name( $field_name ); ?>" type="text"
+								 value="<?php echo esc_attr( isset( $instance[ $field_name ] ) ? $instance[ $field_name ] : $field_data['default_value'] ); ?>"/>
+				</p>
+				<?php
+			//elseif($field_data['type'] == 'textarea'):
+			//You can implement more field types like this.
+			else:
+				echo __( 'Error - Field type not supported', $this->textdomain ) . ': ' . $field_data['type'];
+			endif;
+		}
 	}
 
 	/**

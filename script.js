@@ -25,7 +25,7 @@
 
 			$r.html( '' );
 			items = 0;
-			var $cnt = $( '<div><h3>' + wclsAjax.products + '</h3></div>' );
+//			var $cnt = $( '<div><h3>' + wclsAjax.products + '</h3></div>' );
 			$.each( wclsAjax.prods, function ( l, itm ) {
 				if ( itm.title.toLowerCase().indexOf( keyword ) > - 1 ) {
 					if ( items > 7 ) {
