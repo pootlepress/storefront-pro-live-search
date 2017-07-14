@@ -26,7 +26,7 @@ class Storefront_Pro_Live_Search {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue' ) );
 		add_action( 'rest_api_init', array( $this, 'rest_routes' ) );
 		add_filter( 'storefront_pro_fields', array( $this, 'fields' ) );
-
+		add_action( 'post_updated', array( $this, 'maybe_update_cache' ), 10, 3 );
 		//Now handled by REST api
 //		add_action( 'wp_ajax_Storefront_Pro_Live_Search', array( $this, 'search' ) );
 	}
@@ -111,9 +111,7 @@ class Storefront_Pro_Live_Search {
 		} else {
 			$cats = __( 'Categories', $this->textdomain );
 			$prods = __( 'Products', $this->textdomain );
-			$upload_dir = wp_get_upload_dir();
 			$json = array(
-				'_url' => $upload_dir['baseurl'],
 			);
 
 		}
@@ -137,6 +135,7 @@ class Storefront_Pro_Live_Search {
 		if ( $cats_json ) {
 			$json[ $cats ] = $cats_json;
 		}
+{"_url":"http:\/\/wp\/ppb\/wp-content\/uploads","Products":[{"url":"http:\/\/wp\/ppb\/shop\/\/?post_type=product&amp;p=31","title":"Ninja Silhouette","img":null},{"url":"http:\/\/wp\/ppb\/shop\/\/?post_type=product&amp;p=34","title":"Woo Ninja","img":"2013\/06\/T_6_front.jpg"},{"url":"http:\/\/wp\/ppb\/shop\/\/?post_type=product&amp;p=37","title":"Happy Ninja","img":"2013\/06\/T_7_front.jpg"},{"url":"http:\/\/wp\/ppb\/shop\/\/?post_type=product&amp;p=47","title":"Woo Ninja","img":"2013\/06\/hoodie_2_front.jpg"},{"url":"http:\/\/wp\/ppb\/shop\/\/?post_type=product&amp;p=50","title":"Patient Ninja","img":"2013\/06\/hoodie_3_front.jpg"},{"url":"http:\/\/wp\/ppb\/shop\/\/?post_type=product&amp;p=53","title":"Happy Ninja","img":"2013\/06\/hoodie_4_front.jpg"},{"url":"http:\/\/wp\/ppb\/shop\/\/?post_type=product&amp;p=56","title":"Ninja Silhouette","img":"2013\/06\/hoodie_5_front.jpg"}]}
 */
 		global $wpdb;
 
@@ -145,13 +144,38 @@ class Storefront_Pro_Live_Search {
 		$qry = implode( '%" AND post_title LIKE "%', $s );
 
 		$json[ $prods ] = $wpdb->get_results(
-			'SELECT post.ID as ID, guid AS url, post_title AS title, m2.meta_value AS img ' .
+			'SELECT guid AS url, post_title AS title, m2.meta_value AS img ' .
 			'FROM ' . $wpdb->posts . ' AS post  ' .
 			'LEFT JOIN ' . $wpdb->postmeta . ' as m ON post.ID = m.post_id AND m.meta_key = "_thumbnail_id" ' .
 			'LEFT JOIN ' . $wpdb->postmeta . ' as m2 ON m.meta_value = m2.post_id AND m2.meta_key = "_wp_attached_file" ' .
-			'WHERE post_type = "product" AND post_title LIKE "%' . $qry . '%" LIMIT 7' );
+			'WHERE post_type = "product" AND post_title LIKE "%' . $qry . '%" LIMIT 25' );
 
 		return $json;
+	}
+
+	/**
+	 * @param Int $post_id
+	 * @param WP_Post $post
+	 */
+	function maybe_update_cache( $post_id, $post ) {
+		if ( $post && $post->post_type == 'product' ) {
+			$this->cache_all_products();
+		}
+	}
+
+	function cache_all_products() {
+		global $wpdb;
+
+		$all_products = $wpdb->get_results(
+			'SELECT guid AS url, post_title AS title, m2.meta_value AS img ' .
+			'FROM ' . $wpdb->posts . ' AS post  ' .
+			'LEFT JOIN ' . $wpdb->postmeta . ' as m ON post.ID = m.post_id AND m.meta_key = "_thumbnail_id" ' .
+			'LEFT JOIN ' . $wpdb->postmeta . ' as m2 ON m.meta_value = m2.post_id AND m2.meta_key = "_wp_attached_file" ' .
+			'WHERE post_type = "product" LIMIT 999' );
+
+		update_option( "sfp-ls-all-products", $all_products );
+
+		return $all_products;
 	}
 
 	/** Registers the widget */
@@ -161,10 +185,24 @@ class Storefront_Pro_Live_Search {
 
 	/** Enqueue scripts and styles */
 	function enqueue() {
-		wp_enqueue_script( 'wcls-script', plugin_dir_url( __FILE__ ) . '/script.js', array( 'jquery' ), '1.0.0', 'in_footer' );
+
+		$products = get_option( "sfp-ls-all-products" );
+
+		if ( ! $products ) {
+			$products = $this->cache_all_products();
+		}
+
+		$upload_dir = wp_get_upload_dir();
+
+		wp_enqueue_script( 'wcls-script', plugin_dir_url( __FILE__ ) . '/script.min.js', array( 'jquery' ), '1.0.0', 'in_footer' );
 		wp_localize_script( 'wcls-script', 'wclsAjax', array(
 //			'url' => admin_url( 'admin-ajax.php' ),
 			'url' => get_rest_url( null, '/sfp-live-search/v1/search' ),
+			'upload_dir' => $upload_dir['baseurl'],
+			'categories' => __( 'Categories', $this->textdomain ),
+			'products' => __( 'Products', $this->textdomain ),
+			'prods' => $products,
+//			'cats' => $categories,
 		) );
 		wp_enqueue_style( 'wcls-style', plugin_dir_url( __FILE__ ) . '/style.css' );
 	}
