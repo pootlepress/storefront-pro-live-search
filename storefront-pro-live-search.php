@@ -109,9 +109,16 @@ class Storefront_Pro_Live_Search {
 		if ( $json ) {
 			return $json;
 		} else {
-			$json = array();
+			$cats = __( 'Categories', $this->textdomain );
+			$prods = __( 'Products', $this->textdomain );
+			$upload_dir = wp_get_upload_dir();
+			$json = array(
+				'_url' => $upload_dir['baseurl'],
+			);
+
 		}
 
+/*
 		$terms     = get_terms( array(
 			'taxonomy'   => 'product_cat',
 			'number'     => 7,
@@ -120,30 +127,29 @@ class Storefront_Pro_Live_Search {
 		$cats_json = array();
 		foreach ( $terms as $t ) {
 			$link               = get_term_link( $t );
-			$cats_json[ $link ] = "<a class='wcls-tax' href='$link'>$t->name</a>";
+			$cats_json[ $link ] = [
+				'url' => $link,
+				'title' => $t->name,
+			];
+			//"<a class='wcls-tax' href='$link'>$t->name</a>";
 		}
 
 		if ( $cats_json ) {
-			$json[ __( 'Categories', $this->textdomain ) ] = $cats_json;
+			$json[ $cats ] = $cats_json;
 		}
+*/
+		global $wpdb;
 
-		$prods      = get_posts( array(
-			's'         => $s,
-			'post_type' => 'product',
-			'number'    => 16,
-		) );
-		$prods_json = array();
-		foreach ( $prods as $p ) {
-			$link                = $p->guid;
-			$thumb               = get_the_post_thumbnail_url( $p, 'thumbnail' );
-			$prods_json[ $link ] = "<a class='wcls-prod' href='$link'><img src='$thumb'>$p->post_title</a>";
-		}
+		$s = explode( ' ', $s );
 
-		if ( $prods_json ) {
-			$json[ __( 'Products', $this->textdomain ) ] = $prods_json;
-		}
+		$qry = implode( '%" AND post_title LIKE "%', $s );
 
-		set_transient( "sfp-ls-q-$s", $json, DAY_IN_SECONDS/2 );
+		$json[ $prods ] = $wpdb->get_results(
+			'SELECT post.ID as ID, guid AS url, post_title AS title, m2.meta_value AS img ' .
+			'FROM ' . $wpdb->posts . ' AS post  ' .
+			'LEFT JOIN ' . $wpdb->postmeta . ' as m ON post.ID = m.post_id AND m.meta_key = "_thumbnail_id" ' .
+			'LEFT JOIN ' . $wpdb->postmeta . ' as m2 ON m.meta_value = m2.post_id AND m2.meta_key = "_wp_attached_file" ' .
+			'WHERE post_type = "product" AND post_title LIKE "%' . $qry . '%" LIMIT 7' );
 
 		return $json;
 	}
