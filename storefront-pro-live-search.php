@@ -26,6 +26,7 @@ class Storefront_Pro_Live_Search {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue' ) );
 		add_action( 'rest_api_init', array( $this, 'rest_routes' ) );
 		add_filter( 'storefront_pro_fields', array( $this, 'fields' ) );
+		add_filter( 'storefront_handheld_footer_bar_links', array( $this, 'footer_links' ) );
 		add_action( 'post_updated', array( $this, 'maybe_update_cache' ), 10, 3 );
 		//Now handled by REST api
 //		add_action( 'wp_ajax_Storefront_Pro_Live_Search', array( $this, 'search' ) );
@@ -205,6 +206,21 @@ class Storefront_Pro_Live_Search {
 //			'cats' => $categories,
 		) );
 		wp_enqueue_style( 'wcls-style', plugin_dir_url( __FILE__ ) . '/style.css' );
+	}
+
+	function footer_links( $links ) {
+		$links['search']['callback'] = array( $this, 'footer_search' );
+
+		return $links;
+	}
+
+	function footer_search() {
+		echo '<a href="">' . esc_attr__( 'Search', 'storefront' ) . '</a>';
+		?>
+		<div class="site-search footer-search">
+			<?php the_widget( 'Storefront_Pro_Live_Search_Widget' ); ?>
+		</div>
+		<?php
 	}
 }
 

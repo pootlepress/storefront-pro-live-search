@@ -99,7 +99,7 @@ class Storefront_Pro_Live_Search_Widget extends WP_Widget {
 		}
 		$html .= "
 		<div class='sfp-live-search-container'>
-		<form role='search' method='get' action='http://wp/ppb/'>
+		<form role='search' method='get' action='" . site_url() . "'>
 			<label class='screen-reader-text' for='s'>Search for:</label>
 			<input placeholder='$instance[placeholder]' type='search' class='search-field sfp-live-search-field' name='s' title='Search for:'>
 			<button type='submit'><span class='fa fa-search'></span></button>

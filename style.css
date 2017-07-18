@@ -111,3 +111,9 @@
 
 .sfp-nav-styleleft-vertical .sfp-header-live-search {
 }
+
+.footer-search .sfp-live-search-results {
+	top: auto;
+	bottom: 100%;
+	text-align: left;
+}
